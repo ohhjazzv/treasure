@@ -82,6 +82,8 @@ _DEFAULT_STATS = {
 
 
 
+# States and stats
+
 
 
 def _load_stats():
@@ -105,5 +107,27 @@ def _save_stats():
 
 
 _stats = _load_stats()
+
+
+
+_state ={}
+_hidden = []
+_treasure_positions = []
+
+
+
+####
+#       LEVEL SCALING
+####
+
+
+def _level_config(level):
+    size = min(GRID_SIZE_BASE + (level - 1), GRID_SIZE_MAX)
+    treasures = min(BASE_TREASURES + (level - 1) // 2, MAX_TREASURES)
+    traps = min(4 + level, (size * size) // 4)
+    shovels = max(STARTING_SHOVELS - (level - 1) // 2, MAX_TREASURES)
+    return {"size": size, "treasures": treausres, "traps": traps, "shovels": shovels}
+
+
 
 
