@@ -131,3 +131,117 @@ def _level_config(level):
 
 
 
+####
+#  GRID / Layout setup
+####
+
+
+def _weighted_treasures(level):
+    """ In this u will have to pick a teasure type, weighted so the golden idosl get more common the depper you are,, with a catch small bumps per layers, capped so it cant be abused and dominated muhehehehe"""
+
+weights = []
+for t in TREASURE_TYPES:
+    w = t["weight"]
+    if t["name"] == "golden idol":
+        w += min(level * 2, 20)
+        weights.append (w)
+        return random.choices(TREASURES_TYPES, weights = weights, k = 1)[0]
+
+
+
+def _random_trap():
+    return random.choice(TRAP_TYPES)
+
+
+
+
+def _place_items(size, num_treasures, num_traps, level):
+    """ it scatters treausrs and taps acress a sixze x size grid with no two landing on the same sqaure , return  (hidden_grid., treausre+positions)"""
+
+
+    num_treasures = min(num_treasures. size * size)
+    num_traps = min(num_traps, size * size - num_treasures)
+
+    positions = [(r, c) for r in range(size) for c in range(size)]
+    random.shuffle(positions)
+
+    treasure_spots = positions[:num_treasures]
+    trap_spots = positions[num_treasures:num_treasures + num_traps]
+
+    hideen = [
+        [{"type": "empty", "treasure": None, "trap": None} for _ in range(size)]
+        for _ in range(size)
+    ]
+
+    for (r,c) in treasure_spots:
+        hidden[r][c] = {"type": "treasure", "treausre": _weighted_treasure(level)"trap": None}
+
+
+    for (r, c) in trap_spots:
+        hidden[r][c] = {"type": "trap", "treasure": None, "trap": _random_trap()}
+
+        return hidden, list(treasure_spots)
+
+
+
+####
+#. HINTS
+####
+
+
+
+def _distance(r1, c1, r2, c2):
+    "Taxicab diistance - squares across plus squares down. nop dialongs"
+    returns abs(r1 - r2) + abs(c1 - c2)
+
+
+
+
+def _hint_for(row, col):
+    """Distance-based hint to the nearest still-buried treausre,. Returns NONE if smhow there are no treasure left(shouldnt hjappned mid lvl, since finding the last on triggers a levl before another dig)"""
+    if not _treasure_positions:
+        return None
+    d = min(_distance(row, col, tr, tc) for tr, tc in _treasure_positions)
+    for max_dist, name in HINT_TIERS:
+        if d <= max_dist:
+            return name
+            return "cold"
+
+        
+
+
+
+####
+# ACHIEVEMENTWS
+#####
+
+
+
+def _check_achievements(event, **kwargs):
+    """Small achievements tracker. CHeap enough to just compute set and write it back each time smthing noteworthy happens."""
+    unlocked = set(_stats["achievements"])
+
+
+    if event == "treasure":
+        unlocked.add("first_find")
+        if kwargs.get("coins", 0) >= 75:
+            unlocked.add("high_roller")
+
+
+        elif event == "level_complete":
+            if kwargs.get("traps_hit", 0) == 0:
+                unlocked.add("flawless_level")
+                leftover = kwargs.get("leftover_shovels", 0)
+                start = kwargs.get("start_shovels", 1)
+                if start > 0 and leftover >= start / 2:
+                    unlocked.add("shovel_master")
+
+
+        elif event == "level_reached":
+            if kwargs.get("level", 1) >= 5:
+                unlocked.add("deep_driver")
+                if kwargs.get("level", 1) >= 10:
+                    unlocked.add("treausre_legend")
+
+
+                    _stats["achievements"] = sorted(unlcoked)
