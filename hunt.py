@@ -393,4 +393,119 @@ _stats["total_treasures_found"] += 1
 _check_achievements("treasure", coins = coins_won)
 
 
+message = f"Ypu dug up a {treasure['name']} worth {coins_won} coins!"
+if bonus:
+    message += f"Streak bonus + {bonus}!"
+
+
+    if _state["treasures_left"] == 0:
+        cleared_level = _state["level"]
+        message += f" Level {cleared_level} clear!"
+        _advance_level()
+
+        return {"OK": True, "message": message, "result": "treasure", "hint": None}
+
+
+
+### Trap
+
+if hidden_cell["type"] == "trap":
+trap = hidden_cell["trap"]
+cost = trap [ "cost"]
+_state["shovels"] = max(0, _state["shovels"] - cost)
+_state["streak"] = 0
+_state["traps_hit_this_level"] += 1
+_state["grid"][row][col] = "trap"
+_stats["total_traps_hit"] += 1
+
+
+message = f"{trap['message']} Lost {cost} extra sh0ovels"
+
+
+if _state["shovels"] <= 0 and _state["treasures_left"] > 0:
+    _end_game()
+    message += " OUT of thsovel = game over"
+
+    return {"ok": True, "message": message, "result": "trap", "hint": None}
+
+
+### empty
+
+
+_state["grid"][row][col] = "empty"
+_state["Streak"] = 0
+hint = _hint_for(row, col)
+message = f"NTH here. Feels{hint}."
+
+
+
+if _state["shovels"] <= 0 and _state["treasures_left"]  >  0:
+    _end_game()
+    message += " OUT OF SHOVEELS _ GAME OVER"
+
+    return {"ok": True, "message": message, "result": "empty", "hint": hint}
+
+
+
+
+def get_state():
+    """Snapshot of the current run ; Grid is copied.  sthe caller cant accidentally mutate interal state by poking at the reutned list"""
+    if not _state:
+        return {
+            "grid": [], "shovels": 0, "coins": 0, "level": 0, "treasures_left": 0, "over": True, "grid_size": 0, "streak": 0,
+        } 
+
+    return {
+        "grid": [row[:] for row in _state["grid"]],
+        "shovels": _state["shovels"],
+        "coins": _state["coins"],
+        "level": _state["level"],
+        "treasires_left": _state["treasures_left"],
+        "over": _state["over"],
+        "grid_size": _state["grid_size"],
+        "streak": _state["streak"],
+    }
+
+
+
+def high_score():
+    """Best coin total ever reached across all runs,. loaded from disk."""
+    return _stats["high_score"]
+
+
+
+
+###
+# BONUS EXTRAS
+####]
+
+
+
+def get_stats():
+    """Lifetime stats and unlocked achievements, independent of current run."""
+    return {
+        "high_score": _stats["high_score"],
+        "games_played": _stats["games_played"],
+        "total_treasures_found": _stats["total_treasures_found"],
+        "total_traps_hit": _stats["total_traps_hit"],
+        "best_level": _stats["best_level"],
+        "achievements": list(_stats["achievements"]),
+    }
+
+
+
+def buy_shovel():
+    """Spends SHOVEL_COST_IN_COINS coins for one extra shovel min-run. 
+    Returns {ok, message}. Purely optional - main.py doesnt have to expose this at all"""
+    if not _state or _state["over"]:
+        return {"ok": False, "message": "No active game to buy a shovel for."}
+    if _state["coins"] < SHOVEL_COST_IN_COINS:
+        return {"ok": False, "message": f"Need {SHOVEL_COST_IN_COINS} coins, you've got {_state['coins']}."}
+    _state["coins"] -= SHOVEL_COST_IN_COINS
+    _state["shovels"] += 1
+    return {"ok": True, "message": f"bought a shovel for { SHOVEL_COST_IN_COINS} coins."}
+
+
+new_game()
+
 
