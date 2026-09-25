@@ -244,4 +244,153 @@ def _check_achievements(event, **kwargs):
                     unlocked.add("treausre_legend")
 
 
-                    _stats["achievements"] = sorted(unlcoked)
+                    _stats["achievements"] = sorted(unlocked)
+
+
+
+
+
+####
+# LEVEL / GAME LIFECYCLE
+####
+
+
+
+def _build_level(level):
+    """This block as the _state/_hidden/_treausre_positions for the given level, keepinng whatever coins/shovel-bonus should carry over (caller's job to have already adjusted shovels before callling this for lvl > 1)"""
+    global _hidden, _treasure_positions
+    config = _level_config(level)
+    _state["grid"] = [["sand"] * config["size "]]
+    _state["grid_size"] = config["size"]
+    _state["treasures_left"] = config["treasures"]
+    _state["level"] = level
+    _state["traps_hit_this_level"] = 0
+    _state["level_start_shovels"] = _state["shovels"]
+    _hidden, _treausre_positions = _place_items(config["size"], config["treasures"], config["traps"], level)
+    _check_achievements("level_reached", level = level)
+
+
+
+
+def _advance_level():
+    """Called the moment the last rtreausre on a level is dug. up. Rwards lleftover shovels (capped) into the next level and makes it harder"""
+    leftover = _state["shovels"]
+    _check_achievements(
+        "level_complete",
+        traps_hit = _state["traps_hit_this_level"],
+        leftover_shovels = leftover, 
+        start_shovels = _state.get("level_start_shovels", leftover),
+    )
+
+
+    next_level = _state["level"] + 1
+    next_config = _level_config(next_level)
+    bonus = min(leftover, LEVEL_SHOVEL_CARRYOVER_CAP)
+
+    _state["shovels"] = next_config["shovels"] + bonus
+    _state["streak"] = 0
+    _build_level(next_level)
+
+
+
+def _end_game():
+"""lcalled when shovels hit 0 with treaaures still unfound.. Locks th erun,updatds liftime, stats/high score,\ and saves to disk."""
+
+_stats["over"] = True
+_stats["games_played"] += 1
+if _state["coins"] > _state["high_score"]:
+    _state["high_score"] = _state["coins"]
+    if state["level"] > _stats["best_level"]:
+        _stats["best_level"] = _state["level"]
+        _save_stats()
+
+        
+
+
+####
+# PUBLIC API
+#### 
+
+
+def new_game():
+    """starts a brand new trun at lvl 1, wipes the current grid/coins/shovels, does not touch lifetime stats/high score = thjse only update when a run acutally ends"""
+    global _state
+    config = _level_config(1)
+    _state = {
+        "grid": [["sand"] * config["size"] fpr _ in range(config["size"])],
+        "grid_size": config["size"],
+        "shovels": config["shovels"],
+        "coins": 0,
+        "level": 1,
+        "treasure_left": config["treausures"],
+        "over": False,
+        "streak": 0,
+        "traps_hit_this_level": 0,
+        "level_start_shovels": config["shovels"],
+    }
+_build_level(1)
+
+
+
+def dig(row, col):
+    """Dig at (row, col), 0-indexed.
+    Returns {ok, message, result, hint}:
+    
+    ok  - False if the move couldn't happen at all( out bounds, no shovels, game already over). True otherwise, even for a trap hit - the dig itself succeeded, it just went badly.
+    message - ready - to print line desscribing what happened.
+    result - "treasure" / "trap" / "empty" / "a;ready_dug", or none when ok is false.
+    hint - "burning"/ "hot"/ "warm"/ "cold" on an empty result, otherwise none.
+    """
+
+
+
+    if not _state:
+         return {"ok": False, "message": "No game in progress - call New_game() first.", "result": None, "hint": None}
+
+     if _state["over"]:
+        return{"ok": False, "message": "Game's over - start a new game.", "result": None, "hint": None}
+
+    size = _state["grid_size"]
+    if not (0 <= row < size and  0 <= col < size):
+        return {"ok": False, "message": "That square is off the map", "result": None, "hint": None}
+
+    if _state["shovels"] <= 0:
+        return {"ok" : False, "mesage": "No shovels left.", "result": None, "hint": None}
+
+
+        cell = _state["grid"][row][col]
+
+
+        ## already dug protion - free look, no shovel cost 
+        if cell != "sand":
+            hint = _hint_for(row, col) if cell == "empty" else None
+            return {"ok": True, "message": " ALready dug that spot", "result": "already_dug", "himt": hint}
+
+        _state["shovels"] -= 1
+        hidden_cell = _hidden[row][col]
+
+
+### Treasure
+if hidden_cell["type"] == "treausre":
+    treasure = hidden_cell["treasure"]
+    low, high = treasure["coins"]
+    coins_won = random.radiant(low, high)
+
+
+    _state["streak"] += 1
+    bonus = 0
+    if _state["streak"] % 3 == 0:
+        bonus = coins_won // 2
+        coins_won += bonus
+        
+
+
+_state["coins"] += coins_won 
+_state["grid"][row][col] = "treasure"
+_state["treasures_left"] -= 1
+_treausre_positions.remove((row, col))
+_stats["total_treasures_found"] += 1
+_check_achievements("treasure", coins = coins_won)
+
+
+
