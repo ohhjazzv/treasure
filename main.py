@@ -362,6 +362,20 @@ def render_status(state):
 
     if state.get("Streak", 0) >= 2
     parts.append(colorize(f"Streak x{state['streak']}", C.MAGENTA + C.BOLD))
+    return "".join(parts)
+
+
+
+def rander_legend_line():
+    bits = [
+        colorize("~", CELL_COLORS["sand"]) + "sand",
+        colorize(".", CELL_COLORS["empty"]) + "empty",
+        colorize("S", CELL_COLORS["treasure"]) + "treasure",
+        colorize("X", CELL_COLORS["trap"]) + "trap",
+    ]
+
     return "".join(bits)
 
     
+
+
