@@ -225,3 +225,143 @@ for row in rows:
     lines.append(fmt_row(row))
     return "\n".join(lines)
 
+
+
+
+
+
+########################################################
+### BANNERS
+########################################################
+
+
+
+
+def big_banner():
+    line = "=" * 52
+    title = "X MARKS THE SPOT - TREASURE HUNT X"
+    chest = [
+            r"         --------------------------------------------",
+            r"        /     .-'''''''''''''''''''''''''''-.        \\",
+            r"       /     /    $.    $.     $.     $.      \        \\",
+            r"      |      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  |        |",
+            r"      |      | _______________________________|        |",
+            r"       \_______________________________________________/",
+    ]
+
+    parts = [colorize(line, C.YELLOW)]
+    parts.append(colorize(title.center(52), C.YELLOW + C.BOLD))
+    parts.append(colorize(line, C.YELLOW))
+
+    for row in chest:
+        parts.append(colorize(row, C.YELLOW + C.DIM))
+        return "\n".join(parts)
+
+
+
+def banner_small():
+    line = "=" * 40
+    return colorize(line, C.GREY) + "\n" + colorize("TREASURE HUNT".center(40), C.YELLOW + C.BOLD) + "\n" + colorize(line, C.GREY)
+
+
+
+def random_tip():
+    return colorize("Tip: ", C.CYAN + C.BOLD) + random.choice(TIPS)
+
+
+
+
+############################################################################
+### INPUT PARSING
+############################################################################
+
+
+
+def parse_coordinate(raw, grid_size):
+    text = raw.strip()
+
+    if not text:
+        return None, None, "Type a square like D5, or a command."
+
+
+        letter = text[0]
+        rest = text[1:].strip()
+
+
+        if not letter.isalpha():
+            return None, None, f"'{text}' doesn't start with a column letter. Try smthing like D5"
+
+
+        if not rest:
+            return None, None, f"'{text}' is missing the row number. Try smthing like {letter.upper()}5."
+
+
+        if not rest.isdigit():
+            return None, None, f"'{rest}' isn't a row number. Try smthing like {letter.upper()}5"
+
+
+            letter = letter.upper()
+            number = int(rest)
+
+
+            valid_letters = string.ascii_uppercase[:grid_size]
+            if letter not in valid_letters:
+                return None, None, f"Column '{letter}' is off the grid. Use A-{valid_letters[-1]}."
+
+
+            if not (1 <= number <= grid_size):
+                return None, None, f"Row '{number} is off the grid. use 1-{grid_size}."
+
+
+                row = number - 1          
+                col = valid_letters.index(letter)
+                return row, col, None
+
+
+
+
+#######################################################################
+## GRID/STATUS RENDERING
+######################################################################
+
+
+
+def render_grid(state):
+    size = state["grid_size"]
+    letters = string.ascii_uppercase[:size]
+    row_label_width = len(str(size))
+
+
+    header = "" * (row_label_width + 2) + "".join(f"{l:>2}" for l in letters)
+    divider = "" * (row_label_width + 1) + "+" + "+".join(["---"] * size) + "+"
+
+
+    lines = [header, divider]
+    for r in range(size):
+        cells = []
+        for c in range(size):
+            cell_type = state["grid"][r][c]
+            symbol = CELL_SYMBOLS.get(cell_type, "?")
+            color = CELL_COLORS.get(cell_type, "")
+            cells.append(colorize(f" {symbol}", color))
+            row_label = str(r + 1).rjust(row_label_width)
+            lines.append(f"{row_label} |" + "|".join(cells) + "|")
+            lines.append(divider)
+
+        return "\n".join(lines)
+
+    
+
+def render_status(state):
+    parts = [
+        f" Level {state['level']}",
+        f"{colorize('Shovels', C.CYAN)}; {state['shovels']}",
+        f"{colorize('Coins', C.YELLOW)}: {state['coins']}",
+        f"Treasures left: {state['treasures_left']}",
+    ]
+
+    if state.get("Streak", 0) >= 2
+    parts.append(colorize(f"Streak x{state['streak']}", C.MAGENTA + C.BOLD))
+    return "".join(bits)
+
+    
