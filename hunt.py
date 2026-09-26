@@ -12,7 +12,7 @@ get_state() -> {grid, shovels, coinsk lvel, trasure_left, over ..}
 high_score() -> number
 
 
-row/col passed into dig() are already 0-indexed - main.py tunrs "D5" into (3,4) before calling. Everything about the translaition, drawing the grid, and rejecting junk input is in main not in this file
+row/col passed into dig() are already 0-indexed - main.py tunrs "D5" into (4,3) before calling. Everything about the translaition, drawing the grid, and rejecting junk input is in main not in this file
 Bonus stuffs are bolted on beyond the original 4, all optional for main.py to use: 
 get_states() -> lifetime stats + unloked achiemvemt
 buy_shovel() -> spend coins mid-run for an extra shovel
@@ -111,7 +111,7 @@ _DEFAULT_STATS = {
         "leaderboard": [],
 }
 
-_MAX_LEADERBOARD_ENTIRES = 5
+_MAX_LEADERBOARD_ENTRIES = 5
 
 _difficulty = "normal"
 
@@ -158,8 +158,8 @@ def _level_config(level):
     preset = DIFFICULTY_PRESETS.get(_difficulty, DIFFICULTY_PRESETS["normal"])
     size = min(GRID_SIZE_BASE + (level - 1), GRID_SIZE_MAX)
     treasures = min(BASE_TREASURES + (level - 1) // 2, MAX_TREASURES)
-    traps = min(4 + level, (size * size) // 4)
-    shovels = max(STARTING_SHOVELS - (level - 1) // 2, MAX_TREASURES)
+    traps = max(1, min(round((4 + level) * preset["trap_multiplier"]), (size * size) // 4))
+    shovels = max(STARTING_SHOVELS + preset["shovel_bonus"] - (level - 1) // 2, MIN_SHOVELS)
     return {"size": size, "treasures": treasures, "traps": traps, "shovels": shovels}
 
 
@@ -172,16 +172,16 @@ def _level_config(level):
 
 def _weighted_treasures(level):
     """ In this u will have to pick a teasure type, weighted so the golden idosl get more common the depper you are,, with a catch small bumps per layers, capped so it cant be abused and dominated muhehehehe"""
-avialable = [t for t in TREASURES_TYPES if level >= t.get("min_level", 1)]
-weights = []
-for t in avialable:
-    w = t["weight"]
-    if t["name"] == "golden idol":
-        w += min(level * 2, 20)
-        if t["name"] == "legendary crown":
+    avialable = [t for t in TREASURES_TYPES if level >= t.get("min_level", 1)]
+    weights = []
+    for t in avialable:
+        w = t["weight"]
+        if t["name"] == "golden idol":
+            w += min(level * 2, 20)
+        elif t["name"] == "legendary crown":
             w += min((level - t["min_level"]) * 2, 15)
-        weights.append (w)
-        return random.choices(avialable, weights = weights, k = 1)[0]
+        weights.append(w)
+    return random.choices(avialable, weights = weights, k = 1)[0]
 
 
 
@@ -192,8 +192,8 @@ def _weighted_trap(level):
         w = t["weight"]
         if t.get("instant"):
             w += min(level, 8)
-            weights.append(w)
-            return random.choices(TRAP_TYPES, weights= weights, k = 1)[0]
+        weights.append(w)
+    return random.choices(TRAP_TYPES, weights= weights, k = 1)[0]
 
 
 
@@ -213,13 +213,12 @@ def _place_items(size, num_treasures, num_traps, level):
         for _ in range(size)
     ]
 
-    for (r, c) in treasure_spots:
+    for (r, c) in treasures_spots:
         hidden[r][c] = {"type": "treasure", "treasure": _weighted_treasures(level), "trap": None}
-        for (r,c) in trap_spots:
-            hidden[r][c] = {"type": "trap", "treasure": None, "trap": _weighted_trap(level)}
+    for (r,c) in trap_spots:
+        hidden[r][c] = {"type": "trap", "treasure": None, "trap": _weighted_trap(level)}
 
-
-            return hidden, list(treasures_spots)
+    return hidden, list(treasures_spots)
     
 
 ####
@@ -230,7 +229,7 @@ def _place_items(size, num_treasures, num_traps, level):
 
 def _distance(r1, c1, r2, c2):
     "Taxicab diistance - squares across plus squares down. nop dialongs"
-    returns abs(r1 - r2) + abs(c1 - c2)
+    return abs(r1 - r2) + abs(c1 - c2)
 
 
 
@@ -243,7 +242,7 @@ def _hint_for(row, col):
     for max_dist, name in HINT_TIERS:
         if d <= max_dist:
             return name
-            return "cold"
+    return "cold"
 
         
 
@@ -266,23 +265,23 @@ def _check_achievements(event, **kwargs):
             unlocked.add("high_roller")
 
 
-        elif event == "level_complete":
-            if kwargs.get("traps_hit", 0) == 0:
-                unlocked.add("flawless_level")
-                leftover = kwargs.get("leftover_shovels", 0)
-                start = kwargs.get("start_shovels", 1)
-                if start > 0 and leftover >= start / 2:
-                    unlocked.add("shovel_master")
+    elif event == "level_complete":
+        if kwargs.get("traps_hit", 0) == 0:
+            unlocked.add("flawless_level")
+        leftover = kwargs.get("leftover_shovels", 0)
+        start = kwargs.get("start_shovels", 1)
+        if start > 0 and leftover >= start / 2:
+            unlocked.add("shovel_master")
 
 
-        elif event == "level_reached":
-            if kwargs.get("level", 1) >= 5:
-                unlocked.add("deep_driver")
-                if kwargs.get("level", 1) >= 10:
-                    unlocked.add("treausre_legend")
+    elif event == "level_reached":
+        if kwargs.get("level", 1) >= 5:
+            unlocked.add("deep_driver")
+        if kwargs.get("level", 1) >= 10:
+            unlocked.add("treasure_legend")
 
 
-                    _stats["achievements"] = sorted(unlocked)
+    _stats["achievements"] = sorted(unlocked)
 
 
 
@@ -298,13 +297,13 @@ def _build_level(level):
     """This block as the _state/_hidden/_treausre_positions for the given level, keepinng whatever coins/shovel-bonus should carry over (caller's job to have already adjusted shovels before callling this for lvl > 1)"""
     global _hidden, _treasure_positions
     config = _level_config(level)
-    _state["grid"] = [["sand"] * config["size "]]
+    _state["grid"] = [["sand"] * config["size"] for _ in range(config["size"])]
     _state["grid_size"] = config["size"]
     _state["treasures_left"] = config["treasures"]
     _state["level"] = level
     _state["traps_hit_this_level"] = 0
     _state["level_start_shovels"] = _state["shovels"]
-    _hidden, _treausre_positions = _place_items(config["size"], config["treasures"], config["traps"], level)
+    _hidden, _treasure_positions = _place_items(config["size"], config["treasures"], config["traps"], level)
     _check_achievements("level_reached", level = level)
 
 
@@ -336,22 +335,22 @@ def _update_leaderboard():
     """Drop this run's result into the leaderbord, keep it sorted by coins descending and trim it back down to top N"""
     board = _stats.get("leaderboard", [])
     board.append({"coins": _state["coins"], "level": _state["level"]})
-    board.sort(key=lambda entry: entry["coins"], reverse = TRUE)
+    board.sort(key=lambda entry: entry["coins"], reverse = True)
     _stats["leaderboard"] = board[:_MAX_LEADERBOARD_ENTRIES]
 
 
 
 def _end_game():
-"""lcalled when shovels hit 0 with treaaures still unfound.. Locks th erun,updatds liftime, stats/high score,\ and saves to disk."""
+    """lcalled when shovels hit 0 with treaaures still unfound.. Locks th erun,updatds liftime, stats/high score, and saves to disk."""
 
-_stats["over"] = True
-_stats["games_played"] += 1
-if _state["coins"] > _state["high_score"]:
-    _state["high_score"] = _state["coins"]
-    if state["level"] > _stats["best_level"]:
+    _state["over"] = True
+    _stats["games_played"] += 1
+    if _state["coins"] > _stats["high_score"]:
+        _stats["high_score"] = _state["coins"]
+    if _state["level"] > _stats["best_level"]:
         _stats["best_level"] = _state["level"]
-        _update_leaderboard()
-        _save_stats()
+    _update_leaderboard()
+    _save_stats()
 
         
 
@@ -366,18 +365,18 @@ def new_game():
     global _state
     config = _level_config(1)
     _state = {
-        "grid": [["sand"] * config["size"] fpr _ in range(config["size"])],
+        "grid": [["sand"] * config["size"] for _ in range(config["size"])],
         "grid_size": config["size"],
         "shovels": config["shovels"],
         "coins": 0,
         "level": 1,
-        "treasure_left": config["treausures"],
+        "treasures_left": config["treasures"],
         "over": False,
         "streak": 0,
         "traps_hit_this_level": 0,
         "level_start_shovels": config["shovels"],
     }
-_build_level(1)
+    _build_level(1)
 
 
 
@@ -396,7 +395,7 @@ def dig(row, col):
     if not _state:
          return {"ok": False, "message": "No game in progress - call New_game() first.", "result": None, "hint": None}
 
-     if _state["over"]:
+    if _state["over"]:
         return{"ok": False, "message": "Game's over - start a new game.", "result": None, "hint": None}
 
     size = _state["grid_size"]
@@ -404,101 +403,102 @@ def dig(row, col):
         return {"ok": False, "message": "That square is off the map", "result": None, "hint": None}
 
     if _state["shovels"] <= 0:
-        return {"ok" : False, "mesage": "No shovels left.", "result": None, "hint": None}
+        return {"ok" : False, "message": "No shovels left.", "result": None, "hint": None}
 
 
-        cell = _state["grid"][row][col]
+    cell = _state["grid"][row][col]
 
 
-        ## already dug protion - free look, no shovel cost 
-        if cell != "sand":
-            hint = _hint_for(row, col) if cell == "empty" else None
-            return {"ok": True, "message": " ALready dug that spot", "result": "already_dug", "himt": hint}
+    ## already dug protion - free look, no shovel cost 
+    if cell != "sand":
+        hint = _hint_for(row, col) if cell == "empty" else None
+        return {"ok": True, "message": "Already dug that spot.", "result": "already_dug", "hint": hint}
 
-        _state["shovels"] -= 1
-        _stats["total_shovels_used"] += 1
-        hidden_cell = _hidden[row][col]
-
-
-### Treasure
-if hidden_cell["type"] == "treausre":
-    treasure = hidden_cell["treasure"]
-    low, high = treasure["coins"]
-    coins_won = random.radiant(low, high)
+    _state["shovels"] -= 1
+    _stats["total_shovels_used"] += 1
+    hidden_cell = _hidden[row][col]
 
 
-    _state["streak"] += 1
-    bonus = 0
-    if _state["streak"] % 3 == 0:
-        bonus = coins_won // 2
-        coins_won += bonus
+    ### Treasure
+    if hidden_cell["type"] == "treasure":
+        treasure = hidden_cell["treasure"]
+        low, high = treasure["coins"]
+        coins_won = random.randint(low, high)
+
+
+        _state["streak"] += 1
+        bonus = 0
+        if _state["streak"] % 3 == 0:
+            bonus = coins_won // 2
+            coins_won += bonus
         
 
 
-_state["coins"] += coins_won 
-_state["grid"][row][col] = "treasure"
-_state["treasures_left"] -= 1
-_treausre_positions.remove((row, col))
-_stats["total_treasures_found"] += 1
-_check_achievements("treasure", coins = coins_won)
+        _state["coins"] += coins_won 
+        _state["grid"][row][col] = "treasure"
+        _state["treasures_left"] -= 1
+        _treasure_positions.remove((row, col))
+        _stats["total_treasures_found"] += 1
+        _check_achievements("treasure", coins = coins_won)
 
 
-message = f"Ypu dug up a {treasure['name']} worth {coins_won} coins!"
-if bonus:
-    message += f"Streak bonus + {bonus}!"
+        message = f"You dug up a {treasure['name']} worth {coins_won} coins!"
+        if bonus:
+            message += f" Streak bonus +{bonus}!"
 
 
-    if _state["treasures_left"] == 0:
-        cleared_level = _state["level"]
-        message += f" Level {cleared_level} clear!"
-        _advance_level()
+        if _state["treasures_left"] == 0:
+            cleared_level = _state["level"]
+            message += f" Level {cleared_level} clear!"
+            _advance_level()
+        elif _state["shovels"] <= 0:
+            _end_game()
+            message += " Out of shovels - game over."
 
-        return {"OK": True, "message": message, "result": "treasure", "hint": None}
-
-
-
-### Trap
-
-if hidden_cell["type"] == "trap":
-trap = hidden_cell["trap"]
-cost = trap [ "cost"]
-_state["shovels"] = max(0, _state["shovels"] - cost)
-_state["streak"] = 0
-_state["traps_hit_this_level"] += 1
-_state["grid"][row][col] = "trap"
-_stats["total_traps_hit"] += 1
-
-
-if trap.get("instant"):
-    message = f"{trap['message']} Run Over instantly"
-    _end_game()
-    return {"ok": True, "message": message, "result":"trap", "hint": None}
-
-cost = trap["cost"]
-_state["shovels"] = max(0, _state["shovels"] - cost)
-message = f"{trap['message']} lost {cost} extra shovels."
-
-
-if _state["shovels"] <= 0 and _state["treasures_left"] > 0:
-    _end_game()
-    message += " OUT of thsovel = game over"
-
-    return {"ok": True, "message": message, "result": "trap", "hint": None}
-
-
-### empty
-
-
-_state["grid"][row][col] = "empty"
-_state["Streak"] = 0
-hint = _hint_for(row, col)
-message = f"NTH here. Feels{hint}."
+        return {"ok": True, "message": message, "result": "treasure", "hint": None}
 
 
 
-if _state["shovels"] <= 0 and _state["treasures_left"]  >  0:
-    _end_game()
-    message += " OUT OF SHOVEELS _ GAME OVER"
+    ### Trap
+
+    if hidden_cell["type"] == "trap":
+        trap = hidden_cell["trap"]
+        _state["streak"] = 0
+        _state["traps_hit_this_level"] += 1
+        _state["grid"][row][col] = "trap"
+        _stats["total_traps_hit"] += 1
+
+
+        if trap.get("instant"):
+            message = f"{trap['message']} Run over instantly."
+            _end_game()
+            return {"ok": True, "message": message, "result":"trap", "hint": None}
+
+        cost = trap["cost"]
+        _state["shovels"] = max(0, _state["shovels"] - cost)
+        message = f"{trap['message']} Lost {cost} extra shovels."
+
+
+        if _state["shovels"] <= 0 and _state["treasures_left"] > 0:
+            _end_game()
+            message += " Out of shovels - game over."
+
+        return {"ok": True, "message": message, "result": "trap", "hint": None}
+
+
+    ### empty
+
+
+    _state["grid"][row][col] = "empty"
+    _state["streak"] = 0
+    hint = _hint_for(row, col)
+    message = f"Nothing here. Feels {hint}."
+
+
+
+    if _state["shovels"] <= 0 and _state["treasures_left"]  >  0:
+        _end_game()
+        message += " Out of shovels - game over."
 
     return {"ok": True, "message": message, "result": "empty", "hint": hint}
 
@@ -517,7 +517,7 @@ def get_state():
         "shovels": _state["shovels"],
         "coins": _state["coins"],
         "level": _state["level"],
-        "treasires_left": _state["treasures_left"],
+        "treasures_left": _state["treasures_left"],
         "over": _state["over"],
         "grid_size": _state["grid_size"],
         "streak": _state["streak"],
@@ -619,5 +619,3 @@ def buy_shovel():
 
 
 new_game()
-
-

@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+hunt_save.json
+fakehunt.py
