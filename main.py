@@ -376,6 +376,39 @@ def rander_legend_line():
 
     return "".join(bits)
 
-    
 
 
+###############################################
+#### DIG. RESULT DISPLAY
+###############################################
+
+
+
+def display_dig_result(result):
+    color = RESULT_COLORS.get(result["result"], C.WHITE)
+    print(colorize(result["message"], color))
+
+
+if result.get("hint"):
+    hint_color = HINT_COLORS.get(result["hint"], C.WHITE)
+    print(f"Feeling: {colorize(result['hint'].upper(), hint_color)}")
+
+
+    flavor_pool = {
+        "treasure": FLAVOR_TREASURE,
+        "trap": FLAVOR_TRAP,
+        "empty": FLAVOR_EMPTY,
+    }.get(result["result"])
+
+    if flavor_pool:
+        print(colorize("" + random.choice(flavor_pool), C.GREY))
+
+
+
+def show_level_up(new_level):
+    print()
+    message = f"*** :EVE: {new_level}! THe grid grows, the sand shifts ... ***"
+    print(colorize(message, C.GREEN + C.BOLD))
+
+    if USE_COLOR:
+        time.sleep(0.6)
