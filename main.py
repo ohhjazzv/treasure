@@ -94,3 +94,57 @@ RESULT_COLORS = {
 }
 
 
+
+
+
+
+##############################################################
+## FLAVOUR TEXT
+##############################################################
+
+## SM FUNNYY BONUS STUFF
+
+
+FLAVOR_TREASURE = [
+    "The sand practically glitters where you found it",
+    " YOur pockets are heavier ad your shovel arm is tired. Fair trade",
+    "smwhere, a crab is jealous of you rgood fortune",
+    "yoy do small, dignified victory shuffle",
+]
+
+
+FLAVOUR_TRAP = [
+    "Not to self: check twice, dig once MUEHEHHE!",
+    "the sand really didnt want to be disturbed there",
+    "THAT one's going in the highligght reel. THE BAD KINDA",
+    "You mutter smthing not fit for print",
+]
+
+
+FLAVOR_EMPTY = [
+    "JUST sand. LOST and lots of sand",
+    "BNTH but a very unimpressed crab",
+    "you've briefly become obn with disspointed",
+    "the hole staes back at you, equally empty",
+]
+
+
+TIPS = [
+    "Traps reset your streak, so don't get greedy chasing a bonus",
+    "The legendary crown never shows up before lvl 3. Patience",
+    "Expolosive mines get slightly more commmon the deeper you go",
+    "Already-diug squares are free to re check no shovel costs",
+    "Buying a shovel spends coins you could've kept . ONlyt worht it in a pinch",
+    "Hints only ever point at the neartest treasure,. not all of them,",
+    "a flawless lvl (no traps hit) is its own achievements",
+]
+
+
+ACHIEVEMENTS_INFO = {
+    "first_find": ("Fiirst Find", "DUg up your very first treausre"),
+    "high_roller": ("High Roller", " Found a treasure wrroth 75+ coins in one dig"),
+    "flawless_level": ("Flawless", "Cleared a lvl without hitting  a single trap."),
+    "shovel_master": ("Shovel Master", "Cleared a lvl with at laeast half your shovels left."),
+    "deep_driver": ("DEEP Driver", "Reaeched lvl 5."),
+    "treasure_legend": ("Treasure Legned", "Reached lvl 10."),
+}
