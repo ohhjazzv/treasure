@@ -16,23 +16,23 @@ if os.name == "nt":
 
 
 
-    USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
-    ANIMATORS_ENABLED =  True
-    GAME_VERSION = "1.0"
+USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+ANIMATIONS_ENABLED =  True
+GAME_VERSION = "1.0"
 
 
 
-    def toggle_color():
-        global USE_COLOR
-        USE_COLOR = not USE_COLOR
-        return USE_COLOR
+def toggle_color():
+    global USE_COLOR
+    USE_COLOR = not USE_COLOR
+    return USE_COLOR
 
 
 
-    def toggle_animatinos():
-        global ANIMATIONS_ENABLED
-        ANIMATIONS_ENABLED = not ANIMATIONS_ENABLED
-        return ANIMATIONS_ENABLED
+def toggle_animations():
+    global ANIMATIONS_ENABLED
+    ANIMATIONS_ENABLED = not ANIMATIONS_ENABLED
+    return ANIMATIONS_ENABLED
 
 
 
@@ -56,7 +56,7 @@ def colorize(text, color_code):
     """It warps the text in a color codes, uncless color's disbabled - then js hand back the plain text untouched"""
     if not USE_COLOR or not color_code:
         return text
-        return f"{color_code}{text}{C.RESET}"
+    return f"{color_code}{text}{C.RESET}"
     
 
 
@@ -112,7 +112,7 @@ FLAVOR_TREASURE = [
 ]
 
 
-FLAVOUR_TRAP = [
+FLAVOR_TRAP = [
     "Not to self: check twice, dig once MUEHEHHE!",
     "the sand really didnt want to be disturbed there",
     "THAT one's going in the highligght reel. THE BAD KINDA",
@@ -175,7 +175,7 @@ def safe_input(prompt=""):
 def wait_for_enter(message="Press ENTER to continue....", short = False):
     if short:
         message = "PRESS ENTER"
-        sage_input(colorize(message, C.GREY))
+    safe_input(colorize(message, C.GREY))
 
 
 
@@ -189,7 +189,7 @@ def confirm(prompt):
 def suspense():
     "Tiny pausw with dots before reavling a dig result. Purely for feel - slkippied if animations are turned off in settings, or if there's no real termnial to animatre in anyway"
 
-    if not ANIMATINOS_ENABLED or not USE_COLOR:
+    if not ANIMATIONS_ENABLED or not USE_COLOR:
         return 
     sys.stdout.write("Digging")
     sys.stdout.flush()
@@ -197,14 +197,14 @@ def suspense():
         time.sleep(0.12)
         sys.stdout.write(".")
         sys.stdout.flush()
-        print()
+    print()
 
 
 
 def pluralize(count, singular, plural=None):
     if plural  is None:
         plural = singular + "s"
-        return f"{count} {singular if count == 1 else plural}"
+    return f"{count} {singular if count == 1 else plural}"
 
 
 
@@ -212,16 +212,15 @@ def format_table(headers, rows):
     "Simple aligned text table"
     widths = [len(str(h)) for h in headers]
     for row in rows:
-        for i, call in enumerate(row):
+        for i, cell in enumerate(row):
             widths[i] = max(widths[i], len(str(cell)))
 
+    def fmt_row(cells):
+        return "  ".join(str(c).ljust(widths[i]) for i, c in enumerate(cells))
 
-
-def fmt_row(cells):
-    return "". join(str(c).ljust(widths[i]) for i, c in enumerate(cells))
-lines = [fmt_row(headers), fmt_row(["-" * w for w in widths])]
-for row in rows:
-    lines.append(fmt_row(row))
+    lines = [fmt_row(headers), fmt_row(["-" * w for w in widths])]
+    for row in rows:
+        lines.append(fmt_row(row))
     return "\n".join(lines)
 
 
@@ -240,12 +239,11 @@ def big_banner():
     line = "=" * 52
     title = "X MARKS THE SPOT - TREASURE HUNT X"
     chest = [
-            r"         --------------------------------------------",
-            r"        /     .-'''''''''''''''''''''''''''-.        \\",
-            r"       /     /    $.    $.     $.     $.      \        \\",
-            r"      |      | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  |        |",
-            r"      |      | _______________________________|        |",
-            r"       \_______________________________________________/",
+        r"          ______________________________",
+        "         /  $    $     $     $     $    \\",
+        "        /________________________________\\",
+        r"        |  ~~~~~~~~~~~~[##]~~~~~~~~~~~~  |",
+        r"        |________________________________|",
     ]
 
     parts = [colorize(line, C.YELLOW)]
@@ -254,7 +252,7 @@ def big_banner():
 
     for row in chest:
         parts.append(colorize(row, C.YELLOW + C.DIM))
-        return "\n".join(parts)
+    return "\n".join(parts)
 
 
 
@@ -283,38 +281,38 @@ def parse_coordinate(raw, grid_size):
         return None, None, "Type a square like D5, or a command."
 
 
-        letter = text[0]
-        rest = text[1:].strip()
+    letter = text[0]
+    rest = text[1:].strip()
 
 
-        if not letter.isalpha():
-            return None, None, f"'{text}' doesn't start with a column letter. Try smthing like D5"
+    if not letter.isalpha():
+        return None, None, f"'{text}' doesn't start with a column letter. Try smthing like D5"
 
 
-        if not rest:
-            return None, None, f"'{text}' is missing the row number. Try smthing like {letter.upper()}5."
+    if not rest:
+        return None, None, f"'{text}' is missing the row number. Try smthing like {letter.upper()}5."
 
 
-        if not rest.isdigit():
-            return None, None, f"'{rest}' isn't a row number. Try smthing like {letter.upper()}5"
+    if not rest.isdigit():
+        return None, None, f"'{rest}' isn't a row number. Try smthing like {letter.upper()}5"
 
 
-            letter = letter.upper()
-            number = int(rest)
+    letter = letter.upper()
+    number = int(rest)
 
 
-            valid_letters = string.ascii_uppercase[:grid_size]
-            if letter not in valid_letters:
-                return None, None, f"Column '{letter}' is off the grid. Use A-{valid_letters[-1]}."
+    valid_letters = string.ascii_uppercase[:grid_size]
+    if letter not in valid_letters:
+        return None, None, f"Column '{letter}' is off the grid. Use A-{valid_letters[-1]}."
 
 
-            if not (1 <= number <= grid_size):
-                return None, None, f"Row '{number} is off the grid. use 1-{grid_size}."
+    if not (1 <= number <= grid_size):
+        return None, None, f"Row '{number}' is off the grid. use 1-{grid_size}."
 
 
-                row = number - 1          
-                col = valid_letters.index(letter)
-                return row, col, None
+    row = number - 1          
+    col = valid_letters.index(letter)
+    return row, col, None
 
 
 
@@ -331,8 +329,8 @@ def render_grid(state):
     row_label_width = len(str(size))
 
 
-    header = "" * (row_label_width + 2) + "".join(f"{l:>2}" for l in letters)
-    divider = "" * (row_label_width + 1) + "+" + "+".join(["---"] * size) + "+"
+    header = " " * (row_label_width + 3) + "   ".join(letters)
+    divider = " " * (row_label_width + 1) + "+" + "+".join(["---"] * size) + "+"
 
 
     lines = [header, divider]
@@ -342,38 +340,38 @@ def render_grid(state):
             cell_type = state["grid"][r][c]
             symbol = CELL_SYMBOLS.get(cell_type, "?")
             color = CELL_COLORS.get(cell_type, "")
-            cells.append(colorize(f" {symbol}", color))
-            row_label = str(r + 1).rjust(row_label_width)
-            lines.append(f"{row_label} |" + "|".join(cells) + "|")
-            lines.append(divider)
+            cells.append(colorize(f" {symbol} ", color))
+        row_label = str(r + 1).rjust(row_label_width)
+        lines.append(f"{row_label} |" + "|".join(cells) + "|")
+        lines.append(divider)
 
-        return "\n".join(lines)
+    return "\n".join(lines)
 
     
 
 def render_status(state):
     parts = [
         f" Level {state['level']}",
-        f"{colorize('Shovels', C.CYAN)}; {state['shovels']}",
+        f"{colorize('Shovels', C.CYAN)}: {state['shovels']}",
         f"{colorize('Coins', C.YELLOW)}: {state['coins']}",
         f"Treasures left: {state['treasures_left']}",
     ]
 
-    if state.get("Streak", 0) >= 2
-    parts.append(colorize(f"Streak x{state['streak']}", C.MAGENTA + C.BOLD))
-    return "".join(parts)
+    if state.get("streak", 0) >= 2:
+        parts.append(colorize(f"Streak x{state['streak']}", C.MAGENTA + C.BOLD))
+    return "  |  ".join(parts)
 
 
 
 def rander_legend_line():
     bits = [
-        colorize("~", CELL_COLORS["sand"]) + "sand",
-        colorize(".", CELL_COLORS["empty"]) + "empty",
-        colorize("S", CELL_COLORS["treasure"]) + "treasure",
-        colorize("X", CELL_COLORS["trap"]) + "trap",
+        colorize("~", CELL_COLORS["sand"]) + " sand",
+        colorize(".", CELL_COLORS["empty"]) + " empty",
+        colorize("$", CELL_COLORS["treasure"]) + " treasure",
+        colorize("X", CELL_COLORS["trap"]) + " trap",
     ]
 
-    return "".join(bits)
+    return "   ".join(bits)
 
 
 
@@ -388,9 +386,9 @@ def display_dig_result(result):
     print(colorize(result["message"], color))
 
 
-if result.get("hint"):
-    hint_color = HINT_COLORS.get(result["hint"], C.WHITE)
-    print(f"Feeling: {colorize(result['hint'].upper(), hint_color)}")
+    if result.get("hint"):
+        hint_color = HINT_COLORS.get(result["hint"], C.WHITE)
+        print(f"Feeling: {colorize(result['hint'].upper(), hint_color)}")
 
 
     flavor_pool = {
@@ -406,7 +404,7 @@ if result.get("hint"):
 
 def show_level_up(new_level):
     print()
-    message = f"*** :EVE: {new_level}! THe grid grows, the sand shifts ... ***"
+    message = f"*** LEVEL {new_level}! THe grid grows, the sand shifts ... ***"
     print(colorize(message, C.GREEN + C.BOLD))
 
     if USE_COLOR:
@@ -514,7 +512,7 @@ def show_stats():
     print()
 
     stats = hunt.get_stats()
-    row = [
+    rows = [
         ["High Score", stats["high_score"]],
         ["Games Played", stats["games_played"]],
         ["Treasures Found", stats["total_treasures_found"]],
@@ -528,16 +526,16 @@ def show_stats():
     print()
 
     print(colorize("Achievements", C.CYAN + C.BOLD))
-    unlocked = set(stats["Achievements"])
+    unlocked = set(stats["achievements"])
 
     for key, (title, desc) in ACHIEVEMENTS_INFO.items():
         if key in unlocked:
             print(colorize(f" [x] {title}", C.GREEN + C.BOLD) + f" - {desc}")
         else:
-            print(colorize(" [] ???", C.GREY) + "- KEEP playin to unlock")
+            print(colorize(" [ ] ???", C.GREY) + " - KEEP playin to unlock")
 
-        print()
-        wait_for_enter()
+    print()
+    wait_for_enter()
 
 
 
@@ -595,7 +593,7 @@ def reset_stats_flow():
         print(colorize("Done. Clean slate", C.GREEN))
     else:
         print("Cancelled - nth was touched.")
-        wait_for_enter()
+    wait_for_enter()
 
 
 
@@ -636,12 +634,158 @@ def show_about():
     print()
 
     print("Rules engine (grid, treasures, traps, saves): hunt.py")
-    print("Screen, input prasingm and menus(this file): main.py")
+    print("Screen, input prasingm and menus(this file): play.py")
     print()
 
-    print("hunt.py never prints anything and main.py never touches game")
+    print("hunt.py never prints anything and play.py never touches game")
     print("state directly- they only talk throught hunt.py's 4 functions")
     print('(plus a handful of options bonus ones)')
     print()
 
     wait_for_enter()
+
+
+
+
+###############################################
+### GAME LOOP / MAIN MENU
+###############################################
+
+
+
+def draw_game_screen(state, last_result):
+    clear_screen()
+    print(banner_small())
+    print(render_status(state))
+    print()
+    print(render_grid(state))
+    print(rander_legend_line())
+    print()
+    if last_result is not None:
+        display_dig_result(last_result)
+        print()
+    print(colorize("Type a square (D5), or BUY / HELP / QUIT", C.GREY))
+
+
+
+def show_game_over(state, old_high, old_achievements):
+    clear_screen()
+    print(colorize("GAME OVER", C.RED + C.BOLD))
+    print(colorize("=" * 44, C.RED))
+    print()
+    print(render_grid(state))
+    print()
+    print(f"You reached level {state['level']} with {pluralize(state['coins'], 'coin')}.")
+
+    if state["coins"] > old_high:
+        print(colorize(f"NEW HIGH SCORE: {hunt.high_score()}!", C.YELLOW + C.BOLD))
+    else:
+        print(f"High score: {hunt.high_score()}")
+
+    new_ones = [a for a in hunt.get_stats()["achievements"] if a not in old_achievements]
+    for key in new_ones:
+        title, desc = ACHIEVEMENTS_INFO.get(key, (key, ""))
+        print(colorize(f"Achievement unlocked: {title}", C.GREEN + C.BOLD) + f" - {desc}")
+
+    print()
+    wait_for_enter()
+
+
+
+def play_game():
+    hunt.new_game()
+    old_high = hunt.high_score()
+    old_achievements = set(hunt.get_stats()["achievements"])
+    last_result = None
+
+    while True:
+        state = hunt.get_state()
+        if state["over"]:
+            show_game_over(state, old_high, old_achievements)
+            return
+
+        draw_game_screen(state, last_result)
+        raw = safe_input("> ")
+        command = raw.strip().upper()
+
+        if command in ("QUIT", "Q"):
+            if confirm("Abandon this run? Coins won't count. (Y/N): "):
+                return
+            continue
+
+        if command in ("HELP", "H", "?"):
+            show_legend()
+            continue
+
+        if command == "BUY":
+            bought = hunt.buy_shovel()
+            last_result = {
+                "ok": bought["ok"],
+                "message": bought["message"],
+                "result": "empty" if bought["ok"] else None,
+                "hint": None,
+            }
+            continue
+
+        row, col, error = parse_coordinate(raw, state["grid_size"])
+        if error:
+            last_result = {"ok": False, "message": error, "result": None, "hint": None}
+            continue
+
+        suspense()
+        last_result = hunt.dig(row, col)
+
+        if hunt.get_state()["level"] > state["level"]:
+            show_level_up(hunt.get_state()["level"])
+
+
+
+def main_menu():
+    while True:
+        clear_screen()
+        print(big_banner())
+        print()
+        print(f"High score: {colorize(str(hunt.high_score()), C.YELLOW + C.BOLD)}"
+              f"   Difficulty: {colorize(hunt.get_difficulty().title(), C.CYAN)}")
+        print(random_tip())
+        print()
+        print("1) New game")
+        print("2) How to play")
+        print("3) Leaderboard")
+        print("4) Stats & achievements")
+        print("5) Difficulty")
+        print("6) Settings")
+        print("7) Reset stats")
+        print("8) About")
+        print("Q) Quit")
+        print()
+
+        choice = safe_input("Choose: ").strip().upper()
+
+        if choice == "1":
+            play_game()
+        elif choice == "2":
+            show_legend()
+        elif choice == "3":
+            show_leaderboard()
+        elif choice == "4":
+            show_stats()
+        elif choice == "5":
+            difficulty_menu()
+        elif choice == "6":
+            settings_menu()
+        elif choice == "7":
+            reset_stats_flow()
+        elif choice == "8":
+            show_about()
+        elif choice == "Q":
+            print("Thanks for playing - see u next dig")
+            return
+        else:
+            print(colorize("Not a valid option.", C.RED))
+            wait_for_enter(short=True)
+
+
+
+if __name__ == "__main__":
+    main_menu()
