@@ -12,6 +12,7 @@ some squares have traps. one of them just ends your run on the spot.
 
 grid starts 8x8, goes up to 14x14. four kinds of treasure, the good ones get likelier the deeper you go. the legendary crown doesn't exist until level 3. coins carry over. high score saves to disk.
 
+<<<<<<< HEAD
 running it
 
 no dependencies, just python.
@@ -44,3 +45,8 @@ dig() takes 0-indexed numbers, so turning D5 into (4, 3) is the front end's job.
 in there
 
 4 treasure tiers. 4 trap types, one instant game over. streak bonus every 3 finds. 7 achievements. difficulty presets. top 5 leaderboard. shovel shop, 8 coins each.
+=======
+## running it
+
+no dependencies, just python.
+>>>>>>> 3dcfc70d56e133314ea0d339675dea82da4a3526
