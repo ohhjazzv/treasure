@@ -22,16 +22,6 @@ python gui.py      window version, click to dig
 
 three front ends off one rules file.
 
-files
-
-hunt.py — krish. all the game logic, no printing, no input.
-
-main.py — me. terminal front end.
-
-play.py — krish. his terminal front end.
-
-gui.py — tkinter window version.
-
 the contract between them:
 
 new_game()
