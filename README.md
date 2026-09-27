@@ -1,24 +1,46 @@
-# Treasure Hunt
+treasure
 
-A treasure hunt game, built for Hack Club Third Space, week 2 (theme: **TREASURE**).
+a treasure hunt game in your terminal. week 2 of hack club third space, theme was TREASURE.
 
-Dig squares on a grid of sand. Empty squares tell you how close the nearest treasure is (burning / hot / warm / cold). Traps cost you shovels, and the explosive mine ends the run. Find every treasure to go to the next level: the grid grows from 8x8 up to 14x14. High score and stats are saved between runs.
+treasure is buried under a grid of sand. you get limited shovels. type a coordinate like D5 to dig it.
 
-## Run it
+nothing there? it tells you how close you were. burning, hot, warm, cold.
 
-- `python main.py` - terminal version
-- `python play.py` - terminal version with menus, colours, stats
-- `python gui.py` - window version, click to dig
+clear a level and you go deeper. bigger grid, more traps, fewer shovels.
 
-Needs Python 3.8+, nothing to install.
+some squares have traps. one of them just ends your run on the spot.
 
-## Who built what
+grid starts 8x8, goes up to 14x14. four kinds of treasure, the good ones get likelier the deeper you go. the legendary crown doesn't exist until level 3. coins carry over. high score saves to disk.
 
-| File | Built by | What it does |
-|---|---|---|
-| `hunt.py` | Krish | All the game rules. No printing, no input. |
-| `main.py` | Jaz | Terminal front end. |
-| `play.py` | Krish | Krish's terminal front end with menus. |
-| `gui.py` | Jaz | Tkinter window front end. |
+running it
 
-Bug-fixing, parts of `main.py` and `play.py`, and `gui.py` were done with help from Claude (AI).
+no dependencies, just python.
+
+python main.py     terminal
+python play.py     krish's terminal version, colours and menus
+python gui.py      window version, click to dig
+
+three front ends off one rules file.
+
+files
+
+hunt.py — krish. all the game logic, no printing, no input.
+
+main.py — me. terminal front end.
+
+play.py — krish. his terminal front end.
+
+gui.py — tkinter window version.
+
+the contract between them:
+
+new_game()
+dig(row, col)  -> {ok, message, result, hint}
+get_state()    -> grid, shovels, coins, level, treasures_left, over
+high_score()   -> number
+
+dig() takes 0-indexed numbers, so turning D5 into (4, 3) is the front end's job.
+
+in there
+
+4 treasure tiers. 4 trap types, one instant game over. streak bonus every 3 finds. 7 achievements. difficulty presets. top 5 leaderboard. shovel shop, 8 coins each.
